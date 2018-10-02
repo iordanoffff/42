@@ -11,7 +11,7 @@ class fit_lin_reg():
     algorithm given a set of data
     '''
    
-    def __init__(self, data):
+    def __init__(self, data, learning_rate):
         '''
         fit_lin_reg class constructor  
         args: 
@@ -20,10 +20,14 @@ class fit_lin_reg():
         self.data = data
         self.theta0 = 0
         self.theta1 = 0
+        self.learning_rate = learning_rate
 
 
     def EstimatePrice(self):
         mileage = input("what is the mileage of your car? ")
         _ = self.theta0 + int(mileage) * self.theta1
         return _
+    
+    def TrainModel(self):
+        
 
