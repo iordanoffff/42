@@ -44,6 +44,10 @@ class fit_lin_reg():
 
         self.nb_iter = 0
         self.loss = 1000
+        self.theta0_ev = []
+        self.theta1_ev = []
+        self.loss_ev = []
+        
 
     def EstimatePrice(self, mileage):
         '''
@@ -67,13 +71,47 @@ class fit_lin_reg():
         """
         Train a linear regression model on the given data
         """
+
+        self.theta0_ev.append(self.theta0)
+        self.theta1_ev.append(self.theta1)
+        y_current = self.data.km.apply(self.EstimatePrice, 1)
+        self.loss = np.sum([elem**2 for elem in (self.data.price - y_current)])/ len(self.data)
+        self.loss_ev.append(self.loss)
+
         while self.StopingCriterion():
-            err = self.data.km.apply(self.EstimatePrice, 1) - self.data.price
-            self.theta0 = self.theta0 - (self.learning_rate/len(self.data)) * np.sum(err)
-            self.theta1 = self.theta1 - (self.learning_rate/len(self.data)) * np.sum(err * self.data.km)
+            y_current = self.data.km.apply(self.EstimatePrice, 1)
+            gradient_theta0 = self.learning_rate * (1/ len(self.data)) * np.sum(y_current - self.data.price)
+            gradient_theta1 = self.learning_rate * (1/ len(self.data)) * np.sum(self.data.km * (y_current - self.data.price))
+            self.theta0 = self.theta0 - gradient_theta0
+            self.theta1 = self.theta1 - gradient_theta1
 
             self.nb_iter = self.nb_iter + 1
-            self.loss = np.mean((err)**2)
-            print("theta0: {}".format(self.theta0))
-            print("theta1: {}".format(self.theta1))
-            print("loss: {}".format(self.loss))
+            self.loss = np.sum([elem**2 for elem in (self.data.price - y_current)])/ len(self.data)
+
+            self.loss_ev.append(self.loss)
+            self.theta0_ev.append(self.theta0)
+            self.theta1_ev.append(self.theta1)
+    
+    def PlotTrainInfo(self):
+        _f = plt.figure()
+        plt.suptitle("Evolution during iterations")
+        plt.subplot(1, 3, 1)
+        plt.plot(self.theta0_ev, label = "theta0")
+        plt.legend()
+        plt.subplot(1, 3, 2)
+        plt.plot(self.theta1_ev, label = "theta1")
+        plt.legend()
+        plt.subplot(1, 3, 3)
+        plt.plot(self.loss_ev, label = "loss")
+        plt.legend()
+        return _f
+    
+    def PlotResult(self):
+        _f = plt.figure()
+        plt.scatter(self.data.km, self.data.price, label = "data")
+        y_current = self.data.km.apply(self.EstimatePrice, 1)
+        plt.plot(self.data.km, y_current, label = "predictions")
+        plt.legend()
+        return _f
+        
+
