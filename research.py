@@ -34,6 +34,7 @@ class fit_lin_reg():
             - max_iter (int) maximum number of iteration in the gradient descent
             - precision (float) minimum value of the loss in the gradient descent
         '''
+        self.raw_data = data.copy()
         self.data = data
         self.learning_rate = learning_rate
         self.max_iter = max_iter
@@ -49,7 +50,7 @@ class fit_lin_reg():
         self.loss_ev = []
         
 
-    def EstimatePrice(self, mileage):
+    def estimate_price(self, mileage):
         '''
         Given the mileage of a car, return a prediction of price according to
         theta0 and theta1
@@ -59,26 +60,31 @@ class fit_lin_reg():
         _ = self.theta0 + mileage * self.theta1
         return _
 
-    def StopingCriterion(self):
+    def stopping_criterion(self):
         '''
         Create a double stopping criterion, a maximum number of iteration and a
         precision to reach for the loss.
         '''
         boolean = (self.nb_iter < self.max_iter) & (self.loss > self.precision)
         return boolean
+    
+    def preprocess_data(self):
+        self.data.km = (self.data.km - np.mean(self.data.km))/np.std(self.data.km)
+        
 
-    def TrainModel(self):
+    def train_model(self):
         """
         Train a linear regression model on the given data
         """
+        self.preprocess_data()
 
         self.theta0_ev.append(self.theta0)
         self.theta1_ev.append(self.theta1)
-        y_current = self.data.km.apply(self.EstimatePrice, 1)
+        y_current = self.data.km.apply(self.EstimatePrice(), 1)
         self.loss = np.sum([elem**2 for elem in (self.data.price - y_current)])/ len(self.data)
         self.loss_ev.append(self.loss)
 
-        while self.StopingCriterion():
+        while self.stopping_criterion():
             y_current = self.data.km.apply(self.EstimatePrice, 1)
             gradient_theta0 = self.learning_rate * (1/ len(self.data)) * np.sum(y_current - self.data.price)
             gradient_theta1 = self.learning_rate * (1/ len(self.data)) * np.sum(self.data.km * (y_current - self.data.price))
@@ -92,7 +98,7 @@ class fit_lin_reg():
             self.theta0_ev.append(self.theta0)
             self.theta1_ev.append(self.theta1)
     
-    def PlotTrainInfo(self):
+    def plot_train_info(self):
         _f = plt.figure()
         plt.suptitle("Evolution during iterations")
         plt.subplot(1, 3, 1)
@@ -106,11 +112,11 @@ class fit_lin_reg():
         plt.legend()
         return _f
     
-    def PlotResult(self):
+    def plot_result(self):
         _f = plt.figure()
-        plt.scatter(self.data.km, self.data.price, label = "data")
-        y_current = self.data.km.apply(self.EstimatePrice, 1)
-        plt.plot(self.data.km, y_current, label = "predictions")
+        plt.scatter(self.raw_data.km, self.raw_data.price, label = "data")
+        y_current = self.raw_data.km.apply(self.EstimatePrice, 1)
+        plt.plot(self.raw_data.km, y_current, label = "predictions")
         plt.legend()
         return _f
         
