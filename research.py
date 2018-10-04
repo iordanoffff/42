@@ -12,12 +12,6 @@ import matplotlib.pyplot as plt
 # charge data
 data = pd.read_csv("data_ft_linear_regression.csv")
 
-# plot data
-plt.figure()
-plt.scatter(data.km, data.price)
-plt.show()
-
-
 # linear regression
 class fit_lin_reg():
     '''
@@ -25,7 +19,7 @@ class fit_lin_reg():
     algorithm given a set of data
     '''
 
-    def __init__(self, data, learning_rate, max_iter, precision):
+    def __init__(self, data, learning_rate = 0.01, max_iter = 1000, precision = 0.1):
         '''
         fit_lin_reg class constructor
         args:
@@ -34,7 +28,6 @@ class fit_lin_reg():
             - max_iter (int) maximum number of iteration in the gradient descent
             - precision (float) minimum value of the loss in the gradient descent
         '''
-        self.raw_data = data.copy()
         self.data = data
         self.learning_rate = learning_rate
         self.max_iter = max_iter
@@ -67,10 +60,12 @@ class fit_lin_reg():
         '''
         boolean = (self.nb_iter < self.max_iter) & (self.loss > self.precision)
         return boolean
-    
+
     def preprocess_data(self):
+        """
+        Scaling feature km to simplify the loss
+        """
         self.data.km = (self.data.km - np.mean(self.data.km))/np.std(self.data.km)
-        
 
     def train_model(self):
         """
@@ -80,12 +75,12 @@ class fit_lin_reg():
 
         self.theta0_ev.append(self.theta0)
         self.theta1_ev.append(self.theta1)
-        y_current = self.data.km.apply(self.EstimatePrice(), 1)
+        y_current = self.data.km.apply(self.estimate_price, 1)
         self.loss = np.sum([elem**2 for elem in (self.data.price - y_current)])/ len(self.data)
         self.loss_ev.append(self.loss)
 
         while self.stopping_criterion():
-            y_current = self.data.km.apply(self.EstimatePrice, 1)
+            y_current = self.data.km.apply(self.estimate_price, 1)
             gradient_theta0 = self.learning_rate * (1/ len(self.data)) * np.sum(y_current - self.data.price)
             gradient_theta1 = self.learning_rate * (1/ len(self.data)) * np.sum(self.data.km * (y_current - self.data.price))
             self.theta0 = self.theta0 - gradient_theta0
@@ -114,10 +109,17 @@ class fit_lin_reg():
     
     def plot_result(self):
         _f = plt.figure()
-        plt.scatter(self.raw_data.km, self.raw_data.price, label = "data")
-        y_current = self.raw_data.km.apply(self.EstimatePrice, 1)
-        plt.plot(self.raw_data.km, y_current, label = "predictions")
+        plt.scatter(self.data.km, self.data.price, label = "data")
+        y_current = self.data.km.apply(self.estimate_price, 1)
+        plt.plot(self.data.km, y_current, label = "predictions")
         plt.legend()
         return _f
         
 
+if __name__ == '__main__':
+    test = fit_lin_reg(data)
+    test.train_model()
+    test.plot_train_info()
+    plt.show()
+    test.plot_result()
+    plt.show()
